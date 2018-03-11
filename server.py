@@ -14,7 +14,7 @@ def audio(ws):
    while True:
       msg = ws.receive()
 
-      if first_message and msg is not None: # the first message should be the sample rate
+      if first_message and msg is not None:
          sample_rate = getSampleRate(msg)
          first_message = False
          continue

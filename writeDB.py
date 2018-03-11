@@ -10,7 +10,9 @@ Error handling, unit testing
 from pymongo import MongoClient
 import scipy.io.wavfile as wav
 import numpy as nd
-from bson.binary import Binary
+# import collections  # From Python standard library.
+# import bson
+# from bson.codec_options import CodecOptions
 import pickle
 
 class WriteAudio:
@@ -31,7 +33,7 @@ class WriteAudio:
 
 if __name__ == '__main__':                         # Driver
         rate, data = wav.read('resources/eric.wav')
-        audio = Binary(pickle.dumps(data, protocol=2))
+        audio = pickle.dump(data)
         prepared_query = [0,'insert_one({\"static_phrase\": audio})']
-        obj = WriteAudio('BMSTest','Static',prepared_query)
+        obj = WriteAudio('TestDataB','Static',prepared_query)
         status = obj.write_data(audio)

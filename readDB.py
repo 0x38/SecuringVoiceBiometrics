@@ -21,12 +21,20 @@ class ReadAudio:
         self.querylist = querylist
 
 
-    def read_data(self,audio):
+    def read_data(self):
         if self.querylist[0] == 0:                 # For individual queries
-            query = 'self.db' + '.' + self.collection + '.' + self.querylist[1]
+            query = 'db' + '.' + self.collection + '.' + self.querylist[1]
+            db = self.db
+            print query
             return eval(query)
         # if self.querylist[0] == 1:               # For multiple queries to be executed by a single object
 
 
 if __name__ == '__main__':
-    obj = ReadAudio()
+    prepared_query = [0,'find()']
+    obj = ReadAudio('BMS','Static',prepared_query)
+    cursor = obj.read_data()
+    for temp in cursor:
+        data = temp['static_phrase']
+    unpickled = pickle.load(data)
+    print type(unpickled)
