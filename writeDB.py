@@ -24,10 +24,9 @@ class WriteAudio:
     def write_data(self,audio):
         if self.querylist[0] == 0:                 # For individual queries
             db = self.db
-            print db
             query = 'db' + '.' + self.collection + '.' + self.querylist[1]
             eval(query)
-        # if self.querylist[0] == 0:               # For multiple queries
+        # if self.querylist[0] == 1:               # For multiple queries to be executed by a single object
 
 
 
