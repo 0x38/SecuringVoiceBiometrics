@@ -23,16 +23,15 @@ class WriteAudio:
 
     def write_data(self,audio):
         if self.querylist[0] == 0:                 # For individual queries
-            db = self.db
-            query = 'db' + '.' + self.collection + '.' + self.querylist[1]
-            eval(query)
+            query = 'self.db' + '.' + self.collection + '.' + self.querylist[1]
+            return eval(query)
         # if self.querylist[0] == 1:               # For multiple queries to be executed by a single object
 
 
 
 if __name__ == '__main__':                         # Driver
-        rate, data = wav.read('eric.wav')
+        rate, data = wav.read('resources/eric.wav')
         audio = Binary(pickle.dumps(data, protocol=2))
         prepared_query = [0,'insert_one({\"static_phrase\": audio})']
-        obj = WriteAudio('BMS','Static',prepared_query)
-        obj.write_data(audio)
+        obj = WriteAudio('BMSTest','Static',prepared_query)
+        status = obj.write_data(audio)
