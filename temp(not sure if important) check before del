@@ -1,0 +1,25 @@
+from pymongo import MongoClient
+import scipy.io.wavfile as wav
+import numpy as nd
+from bson.binary import Binary
+import pickle
+
+class WriteAudio:
+
+    def __init__(self,db,collection,querylist):
+        self.con = MongoClient('localhost',27017)
+        self.db = s.db
+        self.collection = self.db[collection]
+        self.querylist = querylist
+
+
+    def write_data(self,identifier,audio):
+        if querylist[0] == 0:
+            collection.querylist[1];
+
+
+if __name__ == '__main__':
+        rate, data = wav.read('eric.wav')
+        audio = Binary(pickle.dumps(data, protocol=2))
+        prepared_query ={ 0,"insert_one({\"static_phrase\": audio})"}
+        obj = WriteAudio("BMS","Static",prepared_query)
