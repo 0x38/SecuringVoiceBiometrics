@@ -36,5 +36,7 @@ if __name__ == '__main__':
     cursor = obj.read_data()
     for temp in cursor:
         data = temp['static_phrase']
-    unpickled = pickle.load(data)
+    string1 = String(data)
+    print type(string1  )
+    unpickled = pickle.load(string1)
     print type(unpickled)
