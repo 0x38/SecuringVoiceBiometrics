@@ -1,28 +1,60 @@
-#!bin/python
-from flask import Flask, jsonify, request
-from flask_uwsgi_websocket import GeventWebSocket
+'''
+Server class, establishes connection with client via Sockets
+Author : Vasanthakumar N
+Date   : 16 Mar 2018
 
-app = Flask(__name__)
-ws = GeventWebSocket(app)
+Todo
+Error handling, unit testing, cleaning code,interface with other classes
+'''
 
-@ws.route('/websocket')
-def audio(ws):
-   first_message = True
-   total_msg = ""
-   sample_rate = 0
+import tornado.httpserver
+import tornado.websocket
+import tornado.ioloop
+import tornado.web
+import socket
+import numpy
+import scipy.io.wavfile as wav
 
-   while True:
-      msg = ws.receive()
+# first_message = True
+# print first_message
+# comp_audio = []
+comp_audio = numpy.ndarray(shape=(1,),dtype='float32')
+# total_msg =100
+class WSHandler(tornado.websocket.WebSocketHandler):
+    def open(self):
+        print 'new connection'
+        comp_audio = []
 
-      if first_message and msg is not None:
-         sample_rate = getSampleRate(msg)
-         first_message = False
-         continue
-      elif msg is not None:
-         audio_as_int_array = numpy.frombuffer(msg, 'i2')
-         doSomething(audio_as_int_array)
-      else:
-         break
+    def on_message(self, message):
+        if message != 'terminate':
+            global comp_audio
+            audio = numpy.frombuffer(message,dtype='float32')
+            comp_audio = numpy.append(comp_audio, audio)
+        else:
+            print "end of recording"
+            print type(comp_audio)
+            print len(comp_audio)
+            # scaled = numpy.int16(comp_audio/numpy.max(numpy.abs(comp_audio)) * 32767)
+            wav.write("testaudio.wav",44100,comp_audio)
 
-if __name__ == '__main__':
-        app.run(debug=True, gevent=100)
+            print "written"
+            self.close()
+
+
+    def on_close(self):
+        print 'connection closed'
+
+    def check_origin(self, origin):
+        return True
+
+application = tornado.web.Application([
+    (r'/ws', WSHandler),
+])
+
+
+if __name__ == "__main__":
+    http_server = tornado.httpserver.HTTPServer(application)
+    http_server.listen(8888)
+    myIP = socket.gethostbyname(socket.gethostname())
+    print '*** Websocket Server Started at %s***' % myIP
+    tornado.ioloop.IOLoop.instance().start()
