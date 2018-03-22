@@ -2,7 +2,6 @@
 Class to read audio chunks from database
 Author : Vasanthakumar N
 Date   : 10 Mar 2018
-
 Todo
 Error handling, unit testing, verify return status
 '''
@@ -10,6 +9,7 @@ Error handling, unit testing, verify return status
 from pymongo import MongoClient
 import scipy.io.wavfile as wav
 import numpy as nd
+from bson import BSON
 from bson.binary import Binary
 import pickle
 
@@ -32,11 +32,9 @@ class ReadAudio:
 
 if __name__ == '__main__':
     prepared_query = [0,'find()']
-    obj = ReadAudio('BMS','Static',prepared_query)
+    obj = ReadAudio('BMStest2','Static',prepared_query)
     cursor = obj.read_data()
     for temp in cursor:
         data = temp['static_phrase']
-    string1 = String(data)
-    print type(string1  )
-    unpickled = pickle.load(string1)
-    print type(unpickled)
+    temp = pickle.loads(data)
+    wav.write("test.wav",44100,temp)

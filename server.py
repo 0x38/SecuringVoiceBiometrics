@@ -36,6 +36,7 @@ class WSHandler(tornado.websocket.WebSocketHandler):
             print len(comp_audio)
             # scaled = numpy.int16(comp_audio/numpy.max(numpy.abs(comp_audio)) * 32767)
             wav.write("testaudio.wav",44100,comp_audio)
+            comp_audio = []
 
             print "written"
             self.close()
@@ -51,10 +52,9 @@ application = tornado.web.Application([
     (r'/ws', WSHandler),
 ])
 
-
 if __name__ == "__main__":
     http_server = tornado.httpserver.HTTPServer(application)
     http_server.listen(8888)
     myIP = socket.gethostbyname(socket.gethostname())
-    print '*** Websocket Server Started at %s***' % myIP
+    print 'Websocket Server Started at %s' % myIP
     tornado.ioloop.IOLoop.instance().start()
