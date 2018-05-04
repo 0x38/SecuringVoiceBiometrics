@@ -1,0 +1,3 @@
+#!/home/vasanth/Development/FYProject/Project/bin/python
+from numba.pycc import main
+main()

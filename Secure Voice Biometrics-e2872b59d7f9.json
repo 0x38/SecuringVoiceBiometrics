@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "secure-voice-biometrics",
+  "private_key_id": "e2872b59d7f9d08446c2da1d88317ba6419ba441",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDLYInYpAhWYorK\nixreFcgsT8xiQjdwVmztNKbVWUqqjqgIJSv7RxXMct7TSuX5/rtD2M018gBA374X\nqU5zN5BQPIziTCpHLd5SgFfuv0L7OBEGiiRbRjiutCdiQ9TNP+9BIkH+FTJkUf8x\nG+g+TZmNjco8NFCGxoihm5TCgPpc8Nos5+CyJ7QgXaGJ146XEhuziyF/TEOEX+LA\nGAedScPFc/OXHF6v3HMp8hej+YtCi4nNgUtPnH1mfMdFaJoUmcXCfLPLboqr/h9+\nV1jFqyFuyUfsiP42IH170zrQHBJu/o+23+5/9UkX2MgQ1rPmIyD73m1eU9dGkA9N\nTga6TcWhAgMBAAECggEACtdoBGwFbsIc3HG1ulzbuXL9NfK03QXvvhBbtrf7vo5R\nake9qbePHlbe8SaxuOspmpMKKMPwXAT2r5u3TSCLOUpqXIjgtb/TSr9r5elSXdfO\nCTTK0zEchexKxNamrNSpltBc8g65YOGBx/bRIVBxLPt/6kgupRSccCL99zAOyJlM\n2vFMBc67tFM4S21twWuFl/9Qaupio18dZlPGxOESV8beDJXLJvOrLK+PhudEWWhq\nxMOrrWALIYWUFkGxVqkcQAaK2eENbD6s/U+W3XBRyItR4tiJmVfXK+hJ+Zma0bSs\n6JDslhIXSIeeWTqJlj5wudmfxPvOo+ORh1+ZQgTWTQKBgQD344J4yJbbN0Z8aHGY\nROpKX5+qUCGWYHO+N1ET1AkisPbcgVMBWH0S9+Uyc1cbZPc+xzGfCMPu2v3xPfv1\nNvS9pvuevWLmDU80+243Vpw7tsXgUmCF64b5/PJXOruEEagzMD/G4+J3tn135Oq5\n0dcIOnCNQ9ro3NthdQoYKBV1nQKBgQDSCCsS3dQtC/nU3OFEqMLVp+b3GnGWHlpn\nr1ONTXyaQH6XyBsf5IFfi/NLMckQ6n/RRgSa0KoGfSFHC/ckpcZIGVh1hiEj1nuU\nlrbTO5eEw8XYQPRtxc0nmZ2GfKJYvVS0TnVsRuHDbjMZWNSrf9kNv7MpliDOb/4J\nHBSGL29y1QKBgHk953SX92Dk2i7DDrxBCK6zsm4knyjjp/ijKZ6fGJDFKRiUkDqa\nQyJh6NISI8qcSWmFF7oHGX3b0lSJ0pAO/wk7gNoVGygV3mW1jCS40dVLAeFDqT4X\nAn+Gvij36vsff7r5oFfw4bVXpmpbpoqYHapCmwYc6Bb43rv9+J/0CvrpAoGBALGX\nAoTDWIJ2W9pmoXsijwuFGr/Zdi2OoLaHAsi5uh/bZK8GHhlLZzDY7vCnufE5trXG\n1GHrCbjO2PJv5ZrxKMUR2UAWF7NrybaL8S6OdsFln8YItiSTWbKgKxfqDoOmIxcK\nODNDg+VxKnfGKpyQT4FWlDEXpcmn3E7rlVcYiM25AoGAYCKqn9O7PLyg+JPj2nZB\ngSztNSFnvGnlEpjdLoJDjpjraHAMQHKTLgT9GTsb4lF4Q0q2a1TyjhYMTZEAUEpA\nxXRB2lxLRqwrwCtJGz87eRDHDEOPKAUITxzGuxSAo5Jz25DWRmT5rfPkdSwJtPu1\nh8WtfWrId9lWDouuSJJJYuI=\n-----END PRIVATE KEY-----\n",
+  "client_email": "svb-935@secure-voice-biometrics.iam.gserviceaccount.com",
+  "client_id": "110184804329131375951",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://accounts.google.com/o/oauth2/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/svb-935%40secure-voice-biometrics.iam.gserviceaccount.com"
+}

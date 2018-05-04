@@ -9,7 +9,13 @@
     //test variables
     var send = true
     var count = 0
-    navigator.mediaDevices.getUserMedia({audio: true}, initializeRecorder);
+    var ws = new WebSocket('ws://127.0.1.1:8888/ws');
+    // function signUp() {
+    //     var username = '{ "category":"UserName", "content":"TestUser"}';
+    //     console.log(myJSON);
+    //     ws.onopen = () => ws.send(myJSON);
+    //
+    // }
     var sampleRate;
     function initializeRecorder(stream){
        audio_context = new AudioContext;
@@ -25,11 +31,10 @@
        recorder.connect(audio_context.destination);                           // connect our recorder to the previous destination
     }
 
-    var ws = new WebSocket('ws://127.0.1.1:8888/ws');
+    var ws = new WebSocket('ws://127.0.1.1:8889/ws');
 
     ws.onopen = function(evt) {
       console.log('Connected to websocket.');
-      // ws.send("sample rate:" + sampleRate);                           // First message: send the sample rate
       navigator.getUserMedia({audio: true, video: false}, initializeRecorder, function(e) {
         console.log('No live audio input: ' + e);
       });
@@ -38,15 +43,24 @@
     function recorderProcess(e) {
       if (send){
         var left = e.inputBuffer.getChannelData(0);
-        ws.send(left);
+        console.log(left);
+        ws.send(Float32ToInt16(left));
+        // ws.send(left)
         console.log(count);
-        if(count++ >= 100){
+        if(count++ >= 10){
           ws.send("terminate");
           send = false;
         }
-
-
       }
+    }
+
+    function Float32ToInt16(buffer) {
+      l = buffer.length;
+      buf = new Int16Array(l);
+      while (l--) {
+        buf[l] = Math.min(1, buffer[l])*0x7FFF;
+      }
+      return buf.buffer;
     }
 
     </script>

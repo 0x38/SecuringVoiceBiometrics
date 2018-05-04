@@ -1,0 +1,3 @@
+[console_scripts]
+audiodiff = audiodiff.commandlinetool:main_func
+

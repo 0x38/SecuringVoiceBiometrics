@@ -14,11 +14,11 @@ import tornado.web
 import socket
 import numpy
 import scipy.io.wavfile as wav
-
+import sys
 # first_message = True
 # print first_message
 # comp_audio = []
-comp_audio = numpy.ndarray(shape=(1,),dtype='float32')
+comp_audio = numpy.ndarray(shape=(1,),dtype='int32')
 # total_msg =100
 class WSHandler(tornado.websocket.WebSocketHandler):
     def open(self):
@@ -28,19 +28,18 @@ class WSHandler(tornado.websocket.WebSocketHandler):
     def on_message(self, message):
         if message != 'terminate':
             global comp_audio
-            audio = numpy.frombuffer(message,dtype='float32')
+            print type(message)
+            # print message
+            audio = numpy.frombuffer(message,dtype='int32')
+            print type(audio)
             comp_audio = numpy.append(comp_audio, audio)
         else:
             print "end of recording"
-            print type(comp_audio)
-            print len(comp_audio)
             # scaled = numpy.int16(comp_audio/numpy.max(numpy.abs(comp_audio)) * 32767)
-            wav.write("testaudio.wav",44100,comp_audio)
+            wav.write("testaudio1.wav",44100,comp_audio)
             comp_audio = []
-
             print "written"
             self.close()
-
 
     def on_close(self):
         print 'connection closed'
@@ -54,7 +53,7 @@ application = tornado.web.Application([
 
 if __name__ == "__main__":
     http_server = tornado.httpserver.HTTPServer(application)
-    http_server.listen(8888)
+    http_server.listen(8889)
     myIP = socket.gethostbyname(socket.gethostname())
     print 'Websocket Server Started at %s' % myIP
     tornado.ioloop.IOLoop.instance().start()
