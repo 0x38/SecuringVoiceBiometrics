@@ -21,13 +21,19 @@ class WriteAudio:
         self.querylist = querylist
 
 
-    def write_data(self,audio):
+    def write_data(self,data):
         if self.querylist[0] == 0:                 # For individual queries
             db = self.db
+
             query = 'db' + '.' + self.collection + '.' + self.querylist[1]
+            print query
             eval(query)
         # if self.querylist[0] == 1:               # For multiple queries to be executed by a single object
 
+    def update_users(self,newUser):
+        db = self.db
+        db.UserNames.update_one({'_id':1}, {'$push': {'UserName':newUser}})
+        print "done"
 
 
 if __name__ == '__main__':                         # Driver
@@ -36,3 +42,4 @@ if __name__ == '__main__':                         # Driver
         prepared_query = [0,'insert_one({\"static_phrase\": audio})']
         obj = WriteAudio('BMStest2','Static',prepared_query)
         audio = Binary(pickle.dumps(data,protocol=2))
+        obj.write_data(audio)

@@ -43,9 +43,6 @@ class SpeechtoText():
             return ('Transcript: {}'.format(result.alternatives[0].transcript))
 
 if __name__ == "__main__":
-    # file_name = os.path.join(
-    #     os.path.dirname(__file__),
-    #     'dynamic.wav')
     obj = SpeechtoText("statictemp.wav",44100)
     string = obj.speechtotext()
     # string = "the time is 5:05 a.m. the time is 5 a.m. the time is 12 p.m. the time is 1:01 a.m."

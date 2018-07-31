@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.10/css/all.css" integrity="sha384-+d0P83n9kaQMCwj8F4RJB66tzIwOKmrdb46+porD/OvrJ+37WqIM7UoBtwHO6Nlg" crossorigin="anonymous">
+    <link rel="stylesheet" href="CSS/style.css">
+    <!-- <script src="JS/AudioRecorder.js"></script> -->
+    <script type="text/javascript">
+
+    $(function() {
+        $('#UserName').bind('keypress', function(event) {
+            var regex = new RegExp("^[a-zA-Z0-9\b]+$");
+            var key = String.fromCharCode(!event.charCode ? event.which : event.charCode);
+            if (!regex.test(key)) {
+                event.preventDefault();
+                return false;
+            }
+        });
+
+        $('#Recorder_Start').hide();
+        $('#Recorder_Stop').hide();
+    });
+
+    function Sign() {
+        var UserName = $('#UserName').val();
+        if (!UserName) {
+            $('#Empty').modal('show');
+            return;
+        }
+        var ws = new WebSocket('ws://127.0.1.1:8888/ws');
+        ws.onopen = function(evt) {
+            console.log("Connection Opened");
+            var Message = {
+                'Category':'UserName',
+                'Content':{'Name':UserName,'Config':'NULL'}
+            };
+
+            ws.send(JSON.stringify(Message));
+        }
+        ws.onmessage = function(e) {
+            var obj = JSON.parse(e.data);
+            console.log(obj);
+            if (obj.Category == "UserName" && obj.Status == 1) {
+                $('#Recorder_Modal').modal('show');
+                $('#Recorder_Start').show();
+                $('#Recorder_Stop').hide();
+            }
+            else if (obj.Category == "UserName" && obj.Status == 0) {
+                $('#UserNotExit_Modal').modal('show');
+            }
+            else if (obj.Category == "Validation" && obj.Status == 1) {
+                console.log("Valid User");
+                $('#Valid_Modal').modal('show');
+                // $('#Empty').modal('show');
+            }
+            else if (obj.Category == "Validation" && obj.Status == 0) {
+                console.log("Invalid user");
+                $('#Invalid_Modal').modal('show');
+            }
+        }
+    }
+
+    function RecorderStart() {
+        $('#Recorder_Start').hide();
+        $('#Recorder_Stop').show();
+        navigator.getUserMedia({audio: true, video: false}, initializeRecorder, function(e) {
+          console.log('No live audio input: ' + e);
+        });
+        ws = new WebSocket('ws://127.0.1.1:8888/ws');
+        function initializeRecorder(stream){
+            send = true;
+            audio_context = new AudioContext;
+            sampleRate = audio_context.sampleRate;
+            audioInput = audio_context.createMediaStreamSource(stream);
+            console.log("Created media stream.");
+            bufferSize = 4096;
+            recorder = audio_context.createScriptProcessor(bufferSize, 1, 1);  // record only 1 channel
+            recorder.onaudioprocess = recorderProcess;                             // specify the processing function
+            audioInput.connect(recorder);                                          // connect stream to our recorder
+            recorder.connect(audio_context.destination);                           // connect our recorder to the previous destination
+        }
+
+        function recorderProcess(e) {
+            // console.log(send);
+            if (send != 'terminate') {
+                console.log("recorder");
+                var left = e.inputBuffer.getChannelData(0);
+                // console.log(typeof(left));
+                // console.log(left);
+                // var processedleft = new Blob([new Float32Array(left)]);
+                // var processedleft = String.fromCharCode.apply(null, new Uint16Array(left));
+                // var processedleft =  Float32ToInt16(left);
+                // var processedleft = String.fromCharCode.apply(null, new Int16Array(intleft));
+                var processedleft =  Array.prototype.slice.call(Float32ToInt32(left));
+                console.log(processedleft);
+                console.log(typeof(processedleft));
+                var Message = {
+                    "Category":"LoginAudio",
+                    "Content":processedleft
+                };
+                // console.log(JSON.stringify(Message));
+                ws.send(JSON.stringify(Message));
+            }
+
+            else if (send == 'terminate') {
+                var Message = {
+                    'Category': 'LoginAudioTer',
+                    'Content': 'terminate'
+                };
+                // console.log("terminated");
+                ws.send(JSON.stringify(Message));
+                audioInput.disconnect(recorder);                                          // connect stream to our recorder
+                recorder.disconnect(audio_context.destination);
+                ws.onmessage = function(e) {
+                    var obj = JSON.parse(e.data);
+                    console.log(obj);
+                    if (obj.Category == "Validation" && obj.Status == 1) {
+                        console.log("Valid User");
+                        $('#Valid_Modal').modal('show');
+                    }
+                    else if (obj.Category == "Validation" && obj.Status == 0) {
+                        console.log("Invalid user");
+                        $('#iv_Modal').modal('show');
+                    }
+                }
+            }
+        }
+
+        function Float32ToInt32(buffer) {
+            l = buffer.length;
+            buf = new Int32Array(l);
+            while (l--) {
+                buf[l] = Math.min(1, buffer[l]) * 0x7FFFFFFF;
+            }
+            return buf;
+        }
+
+        function Float32ToInt16(buffer) {
+            l = buffer.length;
+            buf = new Int16Array(l);
+            while (l--) {
+                buf[l] = Math.min(1, buffer[l]) * 0x7FFF;
+            }
+            return buf;
+        }
+    }
+
+    function RecorderStop() {
+        $('#Recorder_Start').show();
+        $('#Recorder_Stop').hide();
+        send = 'terminate';
+        console.log("RecorderStop");
+        $('#Recorder_Modal').modal('hide');
+    }
+    </script>
+</head>
+<body>
+   <div class="container">
+      <div class="row">
+         <div class="col-sm-4 col-sm-offset-4 col-md-offset-4 col-lg-offset-4 col-lg-4" align="middle">
+            <h1 class="text-center login-title">Sign in to continue</h1>
+            <div class="account-wall">
+               <img class="profile-img" src="Images/profile-img.png" alt="">
+               <form class="form-signin">
+                  <input type="text" id="UserName" class="form-control" placeholder="User Name" required autofocus>
+                  <br/>
+                  <div class="clearfix"></div>
+                  <button class="btn btn-lg btn-primary btn-block" style="margin-top:5px" type="button" onclick="Sign();">
+                  Sign In</button>
+               </form>
+            </div>
+            <a href="Register.html" class="text-center new-account">Create an account </a>
+         </div>
+      </div>
+   </div>
+
+   <div id="Empty" class="modal fade" role="dialog">
+      <div class="modal-dialog">
+         <!-- Modal content-->
+         <div class="modal-content">
+            <!-- <div class="modal-header"> -->
+            <!-- <button type="button" class="close" data-dismiss="modal">&times;</button> -->
+            <h3 class="modal-title" align="middle">Please fill in the form</h3>
+            <!-- </div> -->
+            <div class="modal-footer">
+               <button type="button" align="center" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+         </div>
+      </div>
+   </div>
+
+   <div id="Valid_Modal" class="modal fade" role="dialog">
+      <div class="modal-dialog">
+         <!-- Modal content-->
+         <div class="modal-content">
+            <!-- <div class="modal-header"> -->
+            <!-- <button type="button" class="close" data-dismiss="modal">&times;</button> -->
+            <h3 class="modal-title" align="middle">User successfully authenticated</h2>
+            </br>
+            <img class="profile-img" src="Images/icons8-ok-64.png" alt="">
+            <!-- </div> -->
+            <div class="modal-footer">
+               <button type="button" align="center" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+         </div>
+      </div>
+   </div>
+
+   <div id="iv_Modal" class="modal fade" role="dialog">
+      <div class="modal-dialog">
+         <!-- Modal content-->
+         <div class="modal-content">
+            <!-- <div class="modal-header"> -->
+            <!-- <button type="button" class="close" data-dismiss="modal">&times;</button> -->
+            <h3 class="modal-title" align="middle">User not authenticated</h2>
+            </br>
+            <img class="profile-img" src="Images/icons8-cancel-64.png" alt="">
+            <!-- </div> -->
+            <div class="modal-footer">
+               <button type="button" align="center" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+         </div>
+      </div>
+   </div>
+
+   <div id="Recorder_Modal" class="modal fade" role="dialog">
+      <div class="modal-dialog">
+         <!-- Modal content-->
+         <div class="modal-content">
+            <div class="modal-header">
+               <!-- <button type="button" class="close" data-dismiss="modal">&times;</button> -->
+               <h4 class="modal-title" align="middle">Audio Recorder</h4>
+            </div>
+            <div class="modal-body">
+               <div class="row">
+                  <div class="col-sm-4 col-sm-offset-4 col-md-offset-4 col-lg-offset-4 col-lg-4" align="middle">
+                     <button type="button" id="Recorder_Start" onclick="RecorderStart()" class="btn" >
+                         <i class="fa fa-microphone" aria-hidden="true" style="font-size: 2.5em"></i>
+                     </button>
+                     <button type="button" id="Recorder_Stop" onclick="RecorderStop()" class="btn" >
+                         <i class="fa fa-microphone text-danger" aria-hidden="true" style="font-size: 2.5em"></i>
+                     </button>
+                  </div>
+               </div>
+            </div>
+            <div class="modal-footer">
+               <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+         </div>
+      </div>
+   </div>
+   <div id="UserNotExit_Modal" class="modal fade" role="dialog">
+      <div class="modal-dialog">
+         <!-- Modal content-->
+         <div class="modal-content">
+            <div class="modal-header">
+               <button type="button" class="close" data-dismiss="modal">&times;</button>
+               <h4 class="modal-title" align="middle">User Doesn't Exist</h4>
+            </div>
+            <div class="modal-body">
+               <div class="row">
+                  <div class="col-sm-1 col-md-offset-4 col-lg-offset-4 col-lg-4" align="middle" >
+                     <a href="Register.html">
+                     <button type="button" id="Create_User" align="middle" class="btn">
+                        <i class="fa fa-user" aria-hidden="true" style="font-size: 2.5em"></i>
+                        <h5><b>Register</b></h5>
+                     </button>
+                     <!-- <button type="button" id="Recorder_Start" onclick="RecorderStart()" class="btn" >
+                        <i class="fa fa-microphone" aria-hidden="true" style="font-size: 2.5em"></i>
+                        </button>
+                        <button type="button" id="Recorder_Stop" onclick="RecorderStop()" class="btn" >
+                        <i class="fa fa-microphone text-danger" aria-hidden="true" style="font-size: 2.5em"></i>
+                        </button> -->
+                  </div>
+               </div>
+            </div>
+            <div class="modal-footer">
+               <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+         </div>
+      </div>
+   </div>
+
+</body>
+</html>

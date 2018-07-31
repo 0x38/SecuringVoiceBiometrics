@@ -1,12 +1,3 @@
-'''
-Class to read audio chunks from database
-Author : Vasanthakumar N
-Date   : 10 Mar 2018
-
-Todo
-Error handling, unit testing, verify return status
-'''
-
 from pymongo import MongoClient
 import scipy.io.wavfile as wav
 import numpy as nd
@@ -21,7 +12,6 @@ class ReadAudio:
         self.collection = collection
         self.querylist = querylist
 
-
     def read_data(self):
         if self.querylist[0] == 0:                 # For individual queries
             query = 'db' + '.' + self.collection + '.' + self.querylist[1]
@@ -29,13 +19,26 @@ class ReadAudio:
             print query
             return eval(query)
         # if self.querylist[0] == 1:               # For multiple queries to be executed by a single object
+    # def update_tags(self, ref, newUser):
+    #     db = self.db
+    #     db.UserNames.update_one({'_id':1}, {'$push': {'UserName':newUser}})
+    #     print "done"
 
 
 if __name__ == '__main__':
     prepared_query = [0,'find()']
-    obj = ReadAudio('BMStest2','Static',prepared_query)
+    # update_tags('not_imp','TestUser5')
+    obj = ReadAudio('sbSVB','UserNames',prepared_query)
+    Name = "TestUser1"
+    # obj.update_tags('not_imp','TestUser6')
     cursor = obj.read_data()
     for temp in cursor:
-        data = temp['static_phrase']
-    temp = pickle.loads(data)
-    wav.write("test.wav",44100,temp)
+        print temp
+        data = temp['UserName']
+        if Name in data:
+            print "found"
+        else:
+            print "not found"
+    # temp = pickle.loads(data)
+    # wav.write("test.wav",44100,temp)
+#

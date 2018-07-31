@@ -1,0 +1,383 @@
+<!-- Todo :reset modal after denaing permition -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="CSS/style.css">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.10/css/all.css" integrity="sha384-+d0P83n9kaQMCwj8F4RJB66tzIwOKmrdb46+porD/OvrJ+37WqIM7UoBtwHO6Nlg" crossorigin="anonymous">
+    <script type="text/javascript">
+
+        function config() {
+            var userConfigstr = ""
+            if($("#timecheck").is(':checked')){
+                console.log("time");
+                userConfigstr = userConfigstr.concat("Time");
+                userConfigstr = userConfigstr.concat(':');
+            }
+            if($("#datecheck").is(':checked')){
+                console.log("date");
+                userConfigstr = userConfigstr.concat("Date");
+                userConfigstr = userConfigstr.concat(':');
+            }
+            if($("#tempcheck").is(':checked')){
+                console.log("temp");
+                userConfigstr = userConfigstr.concat("Temp");
+                userConfigstr = userConfigstr.concat(':');
+            }
+
+            return userConfigstr;
+        }
+        function Signup(){
+            var UserName = $('#NewUser').val();
+            var UserConfig
+            console.log("confi");
+            UserConfig = config();
+            if(!UserName || UserConfig == "") {
+                $('#Empty').modal('show');
+                return;
+            }
+            var ws = new WebSocket('ws://127.0.1.1:8888/ws');
+            ws.onopen = function(evt){
+                console.log("Connection Opened");
+                var Message = {
+                    'Category':'UserName',
+                    'Content':{'Name':UserName,'Config':UserConfig}
+                };
+                ws.send(JSON.stringify(Message));
+                ws.onmessage = function(e){
+                    var obj = JSON.parse(e.data);
+                    if(obj.Category == "UserName" && obj.Status == 1){
+                        console.log("User Exist");
+                        $('#DupUser_Modal').modal('show');
+                    }
+                    else if(obj.Category == "UserName" && obj.Status == 0){
+                        // console.log("New User");
+                        $('#Register_Modal').modal('show');
+                        $('#Recorder_Stop').hide();
+                        // $('#SRecorder_Stop').hide();
+                    }
+                }
+            }
+        }
+
+
+        function RecorderStart() {
+            $('#Recorder_Stop').show();
+            $('#Recorder_Start').hide();
+            navigator.getUserMedia({audio: true, video: false}, initializeRecorder, function(e) {
+              console.log('No live audio input: ' + e);
+            });
+            ws = new WebSocket('ws://127.0.1.1:8888/ws');
+            function initializeRecorder(stream){
+                dysend = true;
+                audio_context = new AudioContext;
+                sampleRate = audio_context.sampleRate;
+                audioInput = audio_context.createMediaStreamSource(stream);
+                console.log("Created media stream.");
+                bufferSize = 4096;
+                recorder = audio_context.createScriptProcessor(bufferSize, 1, 1);
+                recorder.onaudioprocess = drecorderProcess;
+                audioInput.connect(recorder);
+                recorder.connect(audio_context.destination);
+            }
+
+            function drecorderProcess(e) {
+                if (dysend != 'terminate') {
+                    console.log("recorder");
+                    var left = e.inputBuffer.getChannelData(0);
+                    var processedleft =  Array.prototype.slice.call(Float32ToInt32(left));
+                    var Message = {
+                        "Category":"dynamicAudio",
+                        "Content":processedleft
+                    };
+                    // console.log(JSON.stringify(Message));
+                    ws.send(JSON.stringify(Message));
+                }
+
+                else if (dysend == 'terminate') {
+                    var Message = {
+                        'Category': 'dynamicAudioTer',
+                        'Content': 'terminate'
+                    };
+                    // console.log("terminated");
+                    ws.send(JSON.stringify(Message));
+                    audioInput.disconnect(recorder);                                          // connect stream to our recorder
+                    recorder.disconnect(audio_context.destination);
+                }
+            }
+
+            function Float32ToInt32(buffer) {
+                l = buffer.length;
+                buf = new Int32Array(l);
+                while (l--) {
+                    buf[l] = Math.min(1, buffer[l]) * 0x7FFFFFFF;
+                }
+                return buf;
+            }
+
+            // function Float32ToInt16(buffer) {
+            //     l = buffer.length;
+            //     buf = new Int16Array(l);
+            //     while (l--) {
+            //         buf[l] = Math.min(1, buffer[l]) * 0x7FFF;
+            //     }
+            //     return buf;
+            // }
+        }
+
+        function RecorderStop() {
+            $('#Recorder_Start').show();
+            $('#Recorder_Stop').hide();
+            dysend = 'terminate';
+            console.log("RecorderStop");
+            $('#Register_Modal').modal('hide');
+            $('#Register_success').modal('show');
+
+
+        }
+
+        function SRecorderStart() {
+            $('#SRecorder_Stop').show();
+            $('#SRecorder_Start').hide();
+            navigator.getUserMedia({audio: true, video: false}, initializeRecorder, function(e) {
+              console.log('No live audio input: ' + e);
+            });
+            ws = new WebSocket('ws://127.0.1.1:8888/ws');
+            function initializeRecorder(stream){
+                stsend = true;
+                audio_context = new AudioContext;
+                sampleRate = audio_context.sampleRate;
+                audioInput = audio_context.createMediaStreamSource(stream);
+                console.log("Created media stream.");
+                bufferSize = 4096;
+                recorder = audio_context.createScriptProcessor(bufferSize, 1, 1);
+                recorder.onaudioprocess = srecorderProcess;
+                audioInput.connect(recorder);
+                recorder.connect(audio_context.destination);
+            }
+
+            function srecorderProcess(e) {
+                if (stsend != 'terminate') {
+                    console.log("recorder");
+                    var left = e.inputBuffer.getChannelData(0);
+                    var processedleft =  Array.prototype.slice.call(left);
+                    var Message = {
+                        "Category":"staticAudio",
+                        "Content":processedleft
+                    };
+                    // console.log(JSON.stringify(Message));
+                    ws.send(JSON.stringify(Message));
+                }
+
+                else if (stsend == 'terminate') {
+                    var Message = {
+                        'Category': 'staticAudioTer',
+                        'Content': 'terminate'
+                    };
+                    // console.log("terminated");
+                    ws.send(JSON.stringify(Message));
+                    audioInput.disconnect(recorder);                                          // connect stream to our recorder
+                    recorder.disconnect(audio_context.destination);
+                }
+            }
+        }
+
+        function SRecorderStop() {
+            $('#SRecorder_Start').show();
+            $('#SRecorder_Stop').hide();
+            stsend = 'terminate';
+            console.log("RecorderStop");
+
+        }
+
+    </script>
+
+
+</head>
+<body>
+    <div id="Empty" class="modal fade" role="dialog">
+       <div class="modal-dialog">
+          <!-- Modal content-->
+          <div class="modal-content">
+             <div class="modal-header">
+             <!-- <button type="button" class="close" data-dismiss="modal">&times;</button> -->
+                <h3 class="modal-title" align="middle">Please fill in the form and Check atleast one configuration</h3>
+             </div>
+             <div class="modal-footer">
+                <button type="button" align="center" class="btn btn-default" data-dismiss="modal">Close</button>
+             </div>
+          </div>
+       </div>
+    </div>
+    <div id="Register_success" class="modal fade" role="dialog">
+       <div class="modal-dialog">
+          <!-- Modal content-->
+          <div class="modal-content">
+             <div class="modal-header">
+             <!-- <button type="button" class="close" data-dismiss="modal">&times;</button> -->
+                <h3 class="modal-title" align="middle">Successfully Registered</h3>
+             </div>
+             <div class="modal-footer">
+                <button type="button" align="center" class="btn btn-default" data-dismiss="modal">Close</button>
+             </div>
+          </div>
+       </div>
+    </div>
+    <div id="DupUser_Modal" class="modal fade" role="dialog">
+       <div class="modal-dialog">
+           <div class="modal-content">
+             <div class="modal-header">
+             <!-- <button type="button" class="close" data-dismiss="modal">&times;</button> -->
+                <h3 class="modal-title" align="middle">Username exist,try another name</h3>
+             </div>
+             <div class="modal-footer">
+                <button type="button" align="center" class="btn btn-default" data-dismiss="modal">Close</button>
+             </div>
+          </div>
+       </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-4 col-sm-offset-4 col-md-offset-4 col-lg-offset-4 col-lg-4" align="middle">
+                <h1 class="text-center login-title">Register</h1>
+                <div class="account-wall">
+                    <img class="profile-img" src="Images/profile-img.png" alt="">
+                    <form class="form-signin">
+                    <input type="text" id="NewUser" class="form-control" placeholder="User Name" required autofocus>
+                    <!-- <input type="text" id="UserConfig" class="form-control" placeholder="Configuration" required autofocus> -->
+                    <br/>
+                    <p>Choose your configuration</p>
+                    <form>
+                        <label class="checkbox-inline">
+                            <input type="checkbox" id="timecheck" value="time">Time
+                        </label>
+                        <label class="checkbox-inline">
+                            <input type="checkbox" id="datecheck" value="data">Date
+                        </label>
+                        <label class="checkbox-inline">
+                            <input type="checkbox" id="tempcheck" value="temp">Temparature
+                        </label>
+                    </form>
+                    <!-- <div class="col-sm-1 col-md-offset-4">
+                        <button type="button" class="btn" data-toggle="modal" data-target="#myModal">
+                            <i class="fa fa-microphone" aria-hidden="true" style="font-size: 2.5em"></i>
+                        </button>
+                    </div> -->
+                    <div class="clearfix"></div>
+                    <button class="btn btn-lg btn-primary btn-block" style="margin-top: 5px" type="button" onclick="Signup();">
+                        Sign Up</button>
+                    </form>
+                </div>
+                <a href="Index.html" class="text-center new-account">Existing User? </a>
+            </div>
+        </div>
+    </div>
+
+    <div id="Register_Modal" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+            <!-- Modal content-->
+              <div class="modal-content">
+                <div class="modal-header">
+                  <!-- <button type="button" class="close" data-dismiss="modal">&times;</button> -->
+                  <h4 class="modal-title" align="middle">Sign Up</h4>
+                  <img class="profile-img" src="Images/profile-img.png" alt="">
+                </div>
+                <div class="modal-body">
+                    <div class="account-wall clearfix" >
+                        <form class="form-signin">
+                            <!-- <div class="well well-sm">
+                                <p>Enter your configuration</p>
+                                <input type="text" id="Config" class="form-control" placeholder="Configuration" required autofocus>
+                            </div> -->
+                            <div class="well well-sm">
+                                <p> Time and tide waits for none. The time was 12:00 a.m. when the day started.
+                                    The temparature these days are a lot higher that what it used to be.
+                                    This is to train the system with the user's voice model.
+                                </p>
+                                 <div class="row">
+                                     <div class="col-sm-4 col-sm-offset-4 col-md-offset-4 col-lg-offset-4 col-lg-4" align="middle">
+                                         <button type="button" id="Recorder_Start" onclick="RecorderStart()" class="btn" >
+                                             <i class="fa fa-microphone" aria-hidden="true" style="font-size: 2.5em"></i>
+                                         </br>
+                                             Start Recording
+                                         </button>
+
+                                         <button type="button" id="Recorder_Stop" onclick="RecorderStop()" class="btn" >
+                                             <i class="fa fa-microphone text-danger" aria-hidden="true" style="font-size: 2.5em"></i>
+                                         </br>
+                                         Stop Recording
+                                         </button>
+                                     </div>
+                                 </div>
+                            </div>
+                            <!-- <div class="well well-sm">
+                                <p><b>Record your static phrase</b></p>
+                                 <div class="row">
+                                     <div class="col-sm-4 col-sm-offset-4 col-md-offset-4 col-lg-offset-4 col-lg-4" align="middle">
+                                         <button type="button" id="SRecorder_Start" onclick="SRecorderStart()" class="btn" >
+                                             <i class="fa fa-microphone" aria-hidden="true" style="font-size: 2.5em"></i>
+                                         </br>
+                                             Start Recording
+                                         </button>
+
+                                         <button type="button" id="SRecorder_Stop" onclick="SRecorderStop()" class="btn" >
+                                             <i class="fa fa-microphone text-danger" aria-hidden="true" style="font-size: 2.5em"></i>
+                                         </br>
+                                         Stop Recording
+                                         </button>
+                                     </div>
+                                 </div>
+                            </div> -->
+                        <br/>
+                        <!-- <div class="clearfix"></div> -->
+                        <!-- <button class="btn btn-lg btn-primary btn-block" style="margin-top:5px" type="button" onclick="Register();">
+                            Register</button>
+                        </form> -->
+                    </div>
+                    <!-- <div class="row">
+                        <div class="col-sm-4 col-sm-offset-4 col-md-offset-4 col-lg-offset-4 col-lg-4" align="middle">
+                            <button type="button" id="Recorder_Start" onclick="RecorderStart()" class="btn" >
+                                <i class="fa fa-microphone" aria-hidden="true" style="font-size: 2.5em"></i>
+                            </button>
+                            <button type="button" id="Recorder_Stop" onclick="RecorderStop()" class="btn" >
+                                <i class="fa fa-microphone text-danger" aria-hidden="true" style="font-size: 2.5em"></i>
+                            </button>
+                        </div>
+                    </div> -->
+                </div>
+                <div class="modal-footer">
+                  <!-- <button type="button" class="btn btn-default" align="middle" data-dismiss="modal">Register</button> -->
+                  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+    <!-- Modal -->
+<!-- <div id="myModal" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+
+
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+              <h4 class="modal-title">Modal Header</h4>
+            </div>
+            <div class="modal-body">
+              <p>Some text in the modal.</p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+
+        </div>
+      </div> -->
+</body>
+</html>
